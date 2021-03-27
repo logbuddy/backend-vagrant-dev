@@ -1,33 +1,12 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-#
-# Requirements
-#
-
-# Virtualbox
-# https://www.virtualbox.org/wiki/Downloads
-# > VirtualBox 6.1.18 platform packages
-# > VirtualBox 6.1.18 Oracle VM VirtualBox Extension Pack
-
-# Vagrant
-# https://www.vagrantup.com/downloads
+REPO_PATH = "p:/inkihh/poc"
 
 #
-# Handling
+# DON'T CHANGE ANYTHING BELOW
+# unless you know what you're doing
 #
-
-# First start: vagrant up
-# Rreconfig: vagrant reload --provision
-# Destroy: vagrant destroy
-# SSH: vagrant ssh
-
-#
-# Localstack
-#
-
-# vagrant ssh
-# HOSTNAME=dev env TMPDIR=.localstacktmp localstack start --docker
 
 Vagrant.configure("2") do |config|
 
@@ -37,15 +16,19 @@ Vagrant.configure("2") do |config|
   config.vm.provision "file", source: "./files/aws/cli/credentials", destination: "$HOME/.aws/"
   config.vm.provision "file", source: "./files/aws/cli/config", destination: "$HOME/.aws/"
   config.vm.provision "file", source: "./files/docker/docker-compose.yml", destination: "$HOME/"
-  #config.vm.provision "file", source: "./files/start.sh", destination: "$HOME/"
+
+  config.vm.synced_folder REPO_PATH, "/src"
 
   config.vm.network "private_network", type: "dhcp"
   config.vm.network "forwarded_port", guest: 4566, host: 4566
+  config.vm.network "forwarded_port", guest: 3000, host: 3000
 
-  config.vm.provision :shell, path: "./files/start.sh", run: 'always'
+  #config.vm.provision :shell, path: "./files/start.sh", run: 'always'
 
   config.vm.provider "virtualbox" do |v|
     v.customize ["modifyvm", :id, "--clipboard", "bidirectional"]
+    v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    v.memory = 8192
+    v.cpus = 4
   end
-
 end
